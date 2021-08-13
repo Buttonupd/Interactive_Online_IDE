@@ -31,7 +31,7 @@ app.post("/run",  async(req, res) => {
   // we need to get the c++ content written into a file from the request
   // we need to run the file
   // return the response
-
+  try {
   // generate the filepath- -send response
   const filepath = await generateFile(language, code);
 
@@ -39,6 +39,9 @@ app.post("/run",  async(req, res) => {
   const output = await executeCpp(filepath)
 
   return res.json({filepath, output});
+  } catch(err) {
+    res.status(500).json({err})
+  }
 });
 
 // Define and environment variable file
