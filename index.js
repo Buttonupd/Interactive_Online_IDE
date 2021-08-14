@@ -1,10 +1,13 @@
 // Dependencies
 const { json } = require("express");
 const express = require("express");
-const { generateFile } = require('./generateFile')
-const { executeCpp } = require("./executeCpp")
+const { generateFile } = require("./generateFile");
+const { executeCpp } = require("./executeCpp");
+const { executePy } = require("./executePy");
+const cors = require("cors");
 // initialize the app
 const app = express();
+app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -15,14 +18,14 @@ app.get("/", (req, res) => {
 });
 
 //Define a post req route
-app.post("/run",  async(req, res) => {
+app.post("/run", async (req, res) => {
   //get the properpties(extract) of a request
   // const language = req.body.language;
   // const code = req.body.code;
   //or
 
   const { language = "cpp", code } = req.body;
-
+  console.log(language);
   // Handle empty requests
   if (code === undefined) {
     return res.status(404).json({ success: false, error: "Empty code body" });
@@ -32,15 +35,21 @@ app.post("/run",  async(req, res) => {
   // we need to run the file
   // return the response
   try {
-  // generate the filepath- -send response
-  const filepath = await generateFile(language, code);
+    // generate the filepath- -send response
+    const filepath = await generateFile(language, code);
 
-  //we need to run the file and send the response
-  const output = await executeCpp(filepath)
+    //we need to run the file and send the response
 
-  return res.json({filepath, output});
-  } catch(err) {
-    res.status(500).json({err})
+    let output;
+    if (language === "cpp") {
+      output = await executeCpp(filepath);
+    } else {
+      output = await executePy(filepath);
+    }
+
+    return res.json({ filepath, output });
+  } catch (err) {
+    res.status(500).json({ err });
   }
 });
 
@@ -50,5 +59,5 @@ port = process.env.port || 5000;
 
 //app listens function
 app.listen(port, () => {
-  console.log(`App listening on http://127.0.0.1:${port}`);
+  console.log(`App listening on ${port}`);
 });
